@@ -51,8 +51,8 @@ class Post extends Cit_Controller
         $this->block_result = array();
         $this->load->library('wsresponse');
         $this->load->library('general');
-        //$this->load->model('post_model');
-        $this->load->model("basic_appineers_master/post_model");
+        $this->load->model('post_model');
+        //$this->load->model("basic_appineers_master/post_model");
     }
 
     /**
