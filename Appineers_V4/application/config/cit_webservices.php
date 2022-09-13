@@ -735,6 +735,24 @@ $config["user_list"] = array(
     ),
     "target" => ""
 );
+
+$config["post"] = array(
+    "title" => "Post Profile",
+    "folder" => "post",
+    "method" => $_SERVER['REQUEST_METHOD'],
+    "params" => array(
+        "post_id",
+        "post_title",
+        "post_description",
+        "posted_by",
+        "post_type",
+        "post_image"
+    ),
+    "token" => "",
+    "payload" => array(
+    ),
+    "target" => ""
+);
 #####GENERATED_CONFIG_SETTINGS_END#####
 
 /* End of file cit_webservices.php */
