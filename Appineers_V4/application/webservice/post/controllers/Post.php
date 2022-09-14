@@ -140,9 +140,12 @@ class Post extends Cit_Controller
         $method = $_SERVER['REQUEST_METHOD'];
         $output_response = array();
         switch ($method) {
-            case 'GET':                
-                $output_response = $this->get_user_details($request_arr);
-                return  $output_response;
+            case 'GET':          
+                if(isset($request_arr['post_id']) && $request_arr['post_id']!='' && $request_arr['post_id']!='all'){
+                    return $output_response = $this->get_user_details($request_arr);
+                }else if(isset($request_arr['post_id']) && $request_arr['post_id']=='all'){
+                    return $output_response = $this->get_user_details_all();
+                }    
                 break;
             case 'PUT':                
                 $output_response = $this->update_post_details($request_arr);
@@ -152,11 +155,7 @@ class Post extends Cit_Controller
                 if((isset($request_arr['post_id']) && $request_arr['post_id']!='') && (isset($request_arr['post_title']) && $request_arr['post_title']!='')){
                     $output_response = $this->update_post_details($request_arr);
                 }
-                else if((isset($request_arr['post_id']) && $request_arr['post_id']!='' && $request_arr['post_id']!='all') && (!isset($request_arr['method']))){
-                    $output_response = $this->get_user_details($request_arr);
-                }else if(isset($request_arr['post_id']) && $request_arr['post_id']=='all'){
-                    $output_response = $this->get_user_details_all();
-                }else if(isset($request_arr['method']) && $request_arr['method']=='delete'){
+                else if(isset($request_arr['method']) && $request_arr['method']=='delete'){
                     $output_response = $this->delete_user($request_arr);
                 }else{
                     $output_response = $this->add_user($request_arr);
@@ -177,8 +176,17 @@ class Post extends Cit_Controller
         $this->block_result = array();
         try
         {
-            $params_arr = array();
+            $validation_res = $this->rules_post($request_arr);
             
+            if ($validation_res["success"] == FAILED_CODE) { //Validation Failed
+                if ($inner_api === true) {
+                    return $validation_res;
+                } else {
+                    $this->wsresponse->sendValidationResponse($validation_res);
+                }
+            }
+            $params_arr = array();
+         
             
             if (isset($request_arr["post_title"]))
             {
@@ -304,8 +312,7 @@ class Post extends Cit_Controller
             $this->block_result["data"] = array();
         }
         $input_params["get_user_details"] = $this->block_result["data"];
-        $this->wsresponse->setResponseStatus(OK);
-        //$input_params = $this->wsresponse->assignSingleRecord($input_params, $this->block_result["data"]);
+        $input_params = $this->wsresponse->assignSingleRecord($input_params["get_user_details"], $this->block_result["data"]);
 
         return $input_params;
     }
@@ -350,12 +357,19 @@ class Post extends Cit_Controller
      * @param array $input_params input_params array to process loop flow.
      * @return array $input_params returns modfied input_params array.
      */
-    public function update_post_details($input_params = array())
+    public function update_post_details($input_params = array(), $inner_api = FALSE)
     {
-        //echo "<pre>";print_r($input_params);exit;
         $this->block_result = array();
         try
         {
+            $validation_res = $this->rules_post($input_params);
+            if ($validation_res["success"] == FAILED_CODE) { //Validation Failed
+                if ($inner_api === true) {
+                    return $validation_res;
+                } else {
+                    $this->wsresponse->sendValidationResponse($validation_res);
+                }
+            }
 
             $params_arr = $where_arr = array();
             if (isset($input_params["post_id"]))
@@ -591,7 +605,7 @@ class Post extends Cit_Controller
     {
         $setting_fields = array(
             "success" => SUCCESS_CODE,
-            "message" => "users_finish_succes2",
+            "message" => "users_finish_success2",
         );
         $output_fields = array();
 
