@@ -10,26 +10,32 @@ defined('BASEPATH') || exit('No direct script access allowed');
  *
  * @subpackage controllers
  *
- * @module User Sign Up Email
+ * @module Post_profile
  *
- * @class User_sign_up_email.php
+ * @class Post.php
  *
- * @path application\webservice\user\controllers\User_sign_up_email.php
+ * @path application\webservice\user\controllers\Post.php
  *
  * @version 4.4
  *
  * @author CIT Dev Team
  *
- * @since 06.09.2019
+ * @since 08.09.2022
  */
 
 class Post extends Cit_Controller
 {
-    public $settings_params;
-    public $output_params;
-    public $single_keys;
-    public $multiple_keys;
-    public $block_result;
+     /** @var array $output_params contains output parameters */
+     public $output_params;
+
+     /** @var array $single_keys contains single array */
+     public $single_keys;
+ 
+     /** @var array $multiple_keys contains multiple array */
+     public $multiple_keys;
+ 
+     /** @var array $block_result contains query returns result array*/
+     public $block_result;
 
     /**
      * __construct method is used to set controller preferences while controller object initialization.
@@ -38,7 +44,7 @@ class Post extends Cit_Controller
     {
         parent::__construct();
     
-        $this->settings_params = array();
+        //$this->settings_params = array();
         $this->output_params = array();
         $this->single_keys = array(
             //"check_unique_user_email",
@@ -52,19 +58,17 @@ class Post extends Cit_Controller
         $this->load->library('wsresponse');
         $this->load->library('general');
         $this->load->model('post_model');
-        //$this->load->model("basic_appineers_master/post_model");
     }
 
     /**
-     * rules_user_sign_up_email method is used to validate api input params.
-     * @created priyanka chillakuru | 06.09.2019
-     * @modified priyanka chillakuru | 06.09.2019
+     * rules_post method is used to validate api input params.
+     * @created vidyadhar sawant | 08.09.2022
+     * @modified vidyadhar sawant | 08.09.2022
      * @param array $request_arr request_arr array is used for api input.
      * @return array $valid_res returns output response of API.
      */
     public function rules_post($request_arr = array())
     {
-//        pr($request_arr );exit;
         $valid_arr = array(
             "post_title" => array(
                 array(
@@ -115,13 +119,14 @@ class Post extends Cit_Controller
                 )
             )
         );
+        $this->wsresponse->setResponseStatus(UNPROCESSABLE_ENTITY);
         $valid_res = $this->wsresponse->validateInputParams($valid_arr, $request_arr, "post");
 
         return $valid_res;
     }
 
     /**
-     * start_user_sign_up_email method is used to initiate api execution flow.
+     * start_post method is used to initiate api execution flow.
      *
      * @param array $request_arr request_arr array is used for api input.
      * @param bool $inner_api inner_api flag is used to idetify whether it is inner api request or general request. 
@@ -135,15 +140,11 @@ class Post extends Cit_Controller
         $method = $_SERVER['REQUEST_METHOD'];
         $output_response = array();
         switch ($method) {
-            case 'GET':
-                //echo "hi";
-                //echo "<pre>";print_r($request_arr);exit;
+            case 'GET':                
                 $output_response = $this->get_user_details($request_arr);
                 return  $output_response;
                 break;
-            case 'PUT':
-                //echo "hi";
-                //echo "<pre>";print_r($request_arr);exit;
+            case 'PUT':                
                 $output_response = $this->update_post_details($request_arr);
                 return  $output_response;
                 break;
@@ -227,6 +228,7 @@ class Post extends Cit_Controller
             if (!$this->block_result["success"])
             {
                 throw new Exception("Insertion failed.");
+                $output_response = $this->users_finish_success_1($params_arr);
             }else{
                 $aws_folder_name = $this->config->item("AWS_FOLDER_NAME");
                 $folder_name = $aws_folder_name . "/" . USER_PROFILE . "/POST/" . $this->block_result["data"][0]["insert_id"];
@@ -246,6 +248,17 @@ class Post extends Cit_Controller
                         $post_arr["post_id"] = $this->block_result["data"][0]["insert_id"];
                         $post_arr["post_media"] = $file_name;
                         $arrupdate = $this->post_model->post_image($post_arr);
+
+                        if ($arrupdate) {
+
+                            $output_response = $this->users_finish_success($params_arr);
+                            //return $output_response;
+                        } else {
+                            $output_response = $this->users_finish_success_1($params_arr);
+        
+                            //return $output_response;
+                        }
+
                     }                    
                 }
             }
@@ -256,8 +269,8 @@ class Post extends Cit_Controller
             $success = 0;
             $this->block_result["data"] = array();
         }
-        $input_params["create_user"] = $this->block_result["data"];
-        $input_params = $this->wsresponse->assignSingleRecord($input_params, $this->block_result["data"]);
+        $input_params["create_post"] = $output_response["settings"];
+        $input_params = $this->wsresponse->assignSingleRecord($input_params["create_post"], $this->block_result["data"]);
 
         return $input_params;
     }
@@ -266,8 +279,8 @@ class Post extends Cit_Controller
 
     /**
      * get_user_details method is used to process query block.
-     * @created priyanka chillakuru | 06.09.2019
-     * @modified priyanka chillakuru | 06.09.2019
+     * @created vidyadhar sawant | 12.09.2022
+     * @modified vidyadhar sawant | 12.09.2022
      * @param array $input_params input_params array to process loop flow.
      * @return array $input_params returns modfied input_params array.
      */
@@ -291,6 +304,7 @@ class Post extends Cit_Controller
             $this->block_result["data"] = array();
         }
         $input_params["get_user_details"] = $this->block_result["data"];
+        $this->wsresponse->setResponseStatus(OK);
         //$input_params = $this->wsresponse->assignSingleRecord($input_params, $this->block_result["data"]);
 
         return $input_params;
@@ -298,8 +312,8 @@ class Post extends Cit_Controller
 
     /**
      * get_user_details method is used to process query block.
-     * @created priyanka chillakuru | 06.09.2019
-     * @modified priyanka chillakuru | 06.09.2019
+     * @created vidyadhar sawant | 12.09.2022
+     * @modified vidyadhar sawant | 12.09.2022
      * @param array $input_params input_params array to process loop flow.
      * @return array $input_params returns modfied input_params array.
      */
@@ -323,6 +337,7 @@ class Post extends Cit_Controller
             $this->block_result["data"] = array();
         }
         $input_params["get_user_details_all"] = $this->block_result["data"];
+        
         //$input_params = $this->wsresponse->assignSingleRecord($input_params, $this->block_result["data"]);
 
         return $input_params;
@@ -330,8 +345,8 @@ class Post extends Cit_Controller
 
      /**
      * update_profile method is used to process query block.
-     * @created priyanka chillakuru | 18.09.2019
-     * @modified priyanka chillakuru | 25.09.2019
+     * @created vidyadhar sawant | 18.09.2019
+     * @modified vidyadhar sawant | 25.09.2019
      * @param array $input_params input_params array to process loop flow.
      * @return array $input_params returns modfied input_params array.
      */
@@ -395,6 +410,7 @@ class Post extends Cit_Controller
             if (!$this->block_result["success"])
             {
                 throw new Exception("updation failed.");
+                $output_response = $this->users_finish_success_3($params_arr);
             }else{
                 $aws_folder_name = $this->config->item("AWS_FOLDER_NAME");
                 $folder_name = $aws_folder_name . "/" . USER_PROFILE . "/POST/" . $input_params["post_id"];
@@ -414,6 +430,16 @@ class Post extends Cit_Controller
                         $post_arr["post_id"] = $input_params["post_id"];
                         $post_arr["post_media"] = $file_name;
                         $arrupdate = $this->post_model->post_image($post_arr);
+
+                        if ($arrupdate) {
+
+                            $output_response = $this->users_finish_success_2($params_arr);
+                            //return $output_response;
+                        } else {
+                            $output_response = $this->users_finish_success_3($params_arr);
+        
+                            //return $output_response;
+                        }
                     }                    
                 }
             }
@@ -424,8 +450,8 @@ class Post extends Cit_Controller
             $success = 0;
             $this->block_result["data"] = array();
         }
-        $input_params["update_profile"] = $this->block_result["data"];
-        $input_params = $this->wsresponse->assignSingleRecord($input_params, $this->block_result["data"]);
+        $input_params["update_post"] = $output_response["settings"];
+        $input_params = $this->wsresponse->assignSingleRecord($input_params["update_post"], $this->block_result["data"]);
 
         return $input_params;
     }
@@ -466,31 +492,76 @@ class Post extends Cit_Controller
                     }                      
                 }
                 $result_arr = $this->post_model->delete_images( $post_id );
+                if ($result_arr) {
+
+                    $output_response = $this->users_finish_success_4($input_params);
+                    $input_params["delete"] = $output_response["settings"];
+                    //return $output_response;
+                } else {
+                    $output_response = $this->users_finish_success_5($input_params);
+
+                    //return $output_response;
+                }
 
                 $this->block_result["data"] = $result_arr;
             }
         } catch (Exception $e) {
             $success = 0;
             $this->block_result["data"] = array();
+            $input_params["delete"] = $this->block_result;
             $this->general->apiLogger($input_params, $e);
         }
-        $input_params["get_post_image"] = $this->block_result["data"];
-        $input_params = $this->wsresponse->assignSingleRecord($input_params, $this->block_result["data"]);
+        
+        $input_params = $this->wsresponse->assignSingleRecord($input_params["delete"]);
 
         return $input_params;
     }
 
+    /**
+     * Used to process finish flow.
+     *
+     * @param array $input_params  array to process loop flow.
+     *
+     * @return array $responce_arr returns responce array of api.
+     */
+
     public function users_finish_success($input_params = array())
     {
-        /*$output_arr['settings']['success'] = "1";
-        $output_arr['settings']['message'] = "User signup successfully";
-        $output_arr['data'] = "";
-        $responce_arr = $this->wsresponse->sendWSResponse($output_arr, array(), "user");
-
-        return $responce_arr;*/
-         $setting_fields = array(
-            "success" => "1",
+        $setting_fields = array(
+            "success" => SUCCESS_CODE,
             "message" => "users_finish_success",
+        );
+        $output_fields = array(
+            "insert_id"
+        );
+
+        $output_array["settings"] = $setting_fields;
+        $output_array["settings"]["fields"] = $output_fields;
+        $output_array["data"] = $input_params;
+
+        $func_array["function"]["name"] = "post";
+        $func_array["function"]["single_keys"] = $this->single_keys;
+        $func_array["function"]["multiple_keys"] = $this->multiple_keys;
+        
+        $this->wsresponse->setResponseStatus(CREATED);
+
+        $responce_arr = $this->wsresponse->outputResponse($output_array, $func_array);
+
+        return $responce_arr;
+    }
+
+    /**
+     * Used to process finish flow.
+     *
+     * @param array $input_params  array to process loop flow.
+     *
+     * @return array $responce_arr returns responce array of api.
+     */
+    public function users_finish_succes_1($input_params = array())
+    {
+        $setting_fields = array(
+            "success" => FAILED_CODE,
+            "message" => "users_finish_succes1",
         );
         $output_fields = array();
 
@@ -502,12 +573,132 @@ class Post extends Cit_Controller
         $func_array["function"]["single_keys"] = $this->single_keys;
         $func_array["function"]["multiple_keys"] = $this->multiple_keys;
 
-        $this->wsresponse->setResponseStatus(200);
+        $this->wsresponse->setResponseStatus(INTERNAL_SERVER_ERROR);
 
         $responce_arr = $this->wsresponse->outputResponse($output_array, $func_array);
 
         return $responce_arr;
     }
 
+    /**
+     * Used to process finish API failure flow.
+     *
+     * @param array $input_params input_params array to process loop flow.
+     *
+     * @return array $responce_arr returns responce array of api.
+     */
+    public function users_finish_success_2($input_params = array())
+    {
+        $setting_fields = array(
+            "success" => SUCCESS_CODE,
+            "message" => "users_finish_succes2",
+        );
+        $output_fields = array();
 
+        $output_array["settings"] = $setting_fields;
+        $output_array["settings"]["fields"] = $output_fields;
+        $output_array["data"] = $input_params;
+
+        $func_array["function"]["name"] = "post";
+        $func_array["function"]["single_keys"] = $this->single_keys;
+        $func_array["function"]["multiple_keys"] = $this->multiple_keys;
+
+        $this->wsresponse->setResponseStatus(OK);
+
+        $responce_arr = $this->wsresponse->outputResponse($output_array, $func_array);
+
+        return $responce_arr;
+    }
+
+    /**
+     * Used to process finish API failure flow.
+     *
+     * @param array $input_params input_params array to process loop flow.
+     *
+     * @return array $responce_arr returns responce array of api.
+     */
+    public function finish_success_3($input_params = array())
+    {
+        $setting_fields = array(
+            "success" => FAILED_CODE,
+            "message" => "users_finish_succes3",
+        );
+        $output_fields = array();
+
+        $output_array["settings"] = $setting_fields;
+        $output_array["settings"]["fields"] = $output_fields;
+        $output_array["data"] = $input_params;
+
+        $func_array["function"]["name"] = "post";
+        $func_array["function"]["single_keys"] = $this->single_keys;
+        $func_array["function"]["multiple_keys"] = $this->multiple_keys;
+
+        $this->wsresponse->setResponseStatus(INTERNAL_SERVER_ERROR);
+
+        $responce_arr = $this->wsresponse->outputResponse($output_array, $func_array);
+
+        return $responce_arr;
+    }
+
+    /**
+     * Used to process finish API failure flow.
+     *
+     * @param array $input_params input_params array to process loop flow.
+     *
+     * @return array $responce_arr returns responce array of api.
+     */
+    public function users_finish_success_4($input_params = array())
+    {
+        $setting_fields = array(
+            "success" => SUCCESS_CODE,
+            "message" => "users_finish_success4",
+        );
+        $output_fields = array(
+            "post_id"
+        );
+
+        $output_array["settings"] = $setting_fields;
+        $output_array["settings"]["fields"] = $output_fields;
+        $output_array["data"] = $input_params;
+
+        $func_array["function"]["name"] = "post";
+        $func_array["function"]["single_keys"] = $this->single_keys;
+        $func_array["function"]["multiple_keys"] = $this->multiple_keys;
+
+        $this->wsresponse->setResponseStatus(OK);
+
+        $responce_arr = $this->wsresponse->outputResponse($output_array, $func_array);
+
+        return $responce_arr;
+    }
+
+    /**
+     * Used to process finish API failure flow.
+     *
+     * @param array $input_params input_params array to process loop flow.
+     *
+     * @return array $responce_arr returns responce array of api.
+     */
+    public function users_finish_success_5($input_params = array())
+    {
+        $setting_fields = array(
+            "success" => FAILED_CODE,
+            "message" => "users_finish_succes5",
+        );
+        $output_fields = array();
+
+        $output_array["settings"] = $setting_fields;
+        $output_array["settings"]["fields"] = $output_fields;
+        $output_array["data"] = $input_params;
+
+        $func_array["function"]["name"] = "post";
+        $func_array["function"]["single_keys"] = $this->single_keys;
+        $func_array["function"]["multiple_keys"] = $this->multiple_keys;
+
+        $this->wsresponse->setResponseStatus(INTERNAL_SERVER_ERROR);
+
+        $responce_arr = $this->wsresponse->outputResponse($output_array, $func_array);
+
+        return $responce_arr;
+    }
 }

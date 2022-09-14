@@ -360,4 +360,13 @@
     $lang["send_message"]["messages_finish_success"] = "Failed to send message" ;
     $lang["send_message"]["blocked_user_finish_success"] = "Blocked user" ;
 
+    //post test
+
+    $lang["post"]["users_finish_success"] = "You have successfully registered" ;
+    $lang["post"]["users_finish_success1"] = "Failed to create post. Please contact admin." ;
+    $lang["post"]["users_finish_success2"] = "You have successfully updated post" ;
+    $lang["post"]["users_finish_success3"] = "Failed to update post. Please contact admin." ;
+    $lang["post"]["users_finish_success4"] = "You have successfully delete post" ;
+    $lang["post"]["users_finish_success5"] = "Failed to delete post. Please contact admin." ;
+
     
