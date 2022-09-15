@@ -575,7 +575,7 @@ class Post extends Cit_Controller
     {
         $setting_fields = array(
             "success" => FAILED_CODE,
-            "message" => "users_finish_succes1",
+            "message" => "users_finish_success1",
         );
         $output_fields = array();
 
@@ -635,7 +635,7 @@ class Post extends Cit_Controller
     {
         $setting_fields = array(
             "success" => FAILED_CODE,
-            "message" => "users_finish_succes3",
+            "message" => "users_finish_success3",
         );
         $output_fields = array();
 
@@ -697,7 +697,7 @@ class Post extends Cit_Controller
     {
         $setting_fields = array(
             "success" => FAILED_CODE,
-            "message" => "users_finish_succes5",
+            "message" => "users_finish_success5",
         );
         $output_fields = array();
 
